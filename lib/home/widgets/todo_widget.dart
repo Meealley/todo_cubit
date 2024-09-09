@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:todo_cube/common/button.dart';
 import 'package:todo_cube/common/custom_textfield.dart';
 import 'package:todo_cube/common/search_field.dart';
@@ -57,7 +59,7 @@ class _TodoWidgetState extends State<TodoWidget>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Home Page",
+                        "Get ahead of your peers with 📝",
                         style: AppTextStyles.bodyText,
                       ),
                       Text(
@@ -105,6 +107,17 @@ class _TodoWidgetState extends State<TodoWidget>
               TabBar(
                 labelStyle: AppTextStyles.bodySmall,
                 controller: _tabController,
+                onTap: (index) {
+                  if (index == 0) {
+                    context.read<TodoFilterCubit>().changeFilter(Filter.active);
+                  } else if (index == 1) {
+                    context.read<TodoFilterCubit>().changeFilter(Filter.all);
+                  } else if (index == 2) {
+                    context
+                        .read<TodoFilterCubit>()
+                        .changeFilter(Filter.completed);
+                  }
+                },
                 tabs: const [
                   Tab(
                     text: 'Active',
@@ -116,6 +129,7 @@ class _TodoWidgetState extends State<TodoWidget>
               SizedBox(
                 height: 400,
                 child: TabBarView(
+                  physics: const NeverScrollableScrollPhysics(),
                   controller: _tabController,
                   children: const [
                     ActiveTab(),
@@ -132,14 +146,35 @@ class _TodoWidgetState extends State<TodoWidget>
   }
 }
 
-class ActiveTab extends StatelessWidget {
-  const ActiveTab({super.key});
+class ActiveTab extends StatefulWidget {
+  const ActiveTab({
+    super.key,
+  });
 
+  @override
+  State<ActiveTab> createState() => _ActiveTabState();
+}
+
+class _ActiveTabState extends State<ActiveTab> {
   @override
   Widget build(BuildContext context) {
     // final Filter filter;
 
     final todos = context.watch<FilteredTodoCubit>().state.filtered;
+
+    late final TextEditingController editingController =
+        TextEditingController();
+
+    // Check if todos list is empty before returning the ListView
+    if (todos.isEmpty) {
+      return Center(
+        child: Text(
+          "No tasks yet. Add a few to get started!",
+          style: AppTextStyles.bodySmall,
+        ),
+      );
+    }
+
     return ListView.separated(
       shrinkWrap: true,
       itemCount: todos.length,
@@ -147,14 +182,69 @@ class ActiveTab extends StatelessWidget {
         return const Divider();
       },
       itemBuilder: (context, index) {
-        return ListTile(
-          leading: const Icon(
-            Icons.check_box,
-            color: AppColors.primary,
-          ),
-          title: Text(
-            todos[index].desc,
-            style: AppTextStyles.bodySmall,
+        return Dismissible(
+          key: ValueKey(todos[index].id),
+          onDismissed: (_) {
+            context.read<TodoListCubit>().removeTodo(todos[index]);
+          },
+          child: ListTile(
+            onTap: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    bool error = false;
+                    editingController.text = todos[index].desc;
+
+                    return StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setState) {
+                      return AlertDialog(
+                        title: Text(
+                          "Edit Task ",
+                          style: AppTextStyles.bodyText,
+                        ),
+                        content: CustomTextField(
+                          textEditingControlle: editingController,
+                          labelText: "Edit your current task",
+                        ),
+                        actions: [
+                          ButtonPress(
+                            text: "Cancel",
+                            onPressed: () {
+                              context.pop();
+                            },
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          ButtonPress(
+                            text: "Edit",
+                            onPressed: () {
+                              setState(() {
+                                if (editingController.text.isNotEmpty) {
+                                  context.read<TodoListCubit>().editTodo(
+                                        todos[index].id,
+                                        editingController.text,
+                                      );
+                                  context.pop();
+                                }
+                              });
+                            },
+                          )
+                        ],
+                      );
+                    });
+                  });
+            },
+            leading: Checkbox(
+              value: todos[index].completed,
+              onChanged: (bool? checked) {
+                context.read<TodoListCubit>().toggleTodo(todos[index].id);
+              },
+            ),
+            title: Text(
+              todos[index].desc,
+              style: AppTextStyles.bodySmall,
+            ),
           ),
         );
       },

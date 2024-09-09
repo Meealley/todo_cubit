@@ -1,5 +1,5 @@
 enum Filter {
-  all,
   active,
+  all,
   completed,
 }
