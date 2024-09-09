@@ -5,9 +5,11 @@ import 'package:todo_cube/utils/appcolors.dart';
 
 class SearchField extends StatelessWidget {
   final TextEditingController textEditingControlle;
+  final void Function(String)? onChange;
   const SearchField({
     super.key,
     required this.textEditingControlle,
+    this.onChange,
   });
 
   @override
@@ -17,6 +19,7 @@ class SearchField extends StatelessWidget {
       height: 45,
       child: TextField(
         keyboardType: TextInputType.text,
+        onChanged: onChange,
         controller: textEditingControlle,
         style: AppTextStyles.bodySmall,
         decoration: const InputDecoration(

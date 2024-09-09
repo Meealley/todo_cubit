@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_cube/common/button.dart';
 import 'package:todo_cube/common/custom_textfield.dart';
 import 'package:todo_cube/common/search_field.dart';
+import 'package:todo_cube/cubits/cubits.dart';
+import 'package:todo_cube/models/filter.dart';
 import 'package:todo_cube/utils/app_textstyle.dart';
 import 'package:todo_cube/utils/appcolors.dart';
 
@@ -31,6 +34,7 @@ class _TodoWidgetState extends State<TodoWidget>
     // TODO: implement dispose
     super.dispose();
     _tabController.dispose();
+    textEditingController.dispose();
   }
 
   @override
@@ -47,18 +51,22 @@ class _TodoWidgetState extends State<TodoWidget>
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Home Page",
-                    style: AppTextStyles.bodyText,
-                  ),
-                  Text(
-                    "10 items left",
-                    style: AppTextStyles.bodyItems,
-                  )
-                ],
+              BlocBuilder<ActiveTodoCountCubit, ActiveTodoCountState>(
+                builder: (context, state) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Home Page",
+                        style: AppTextStyles.bodyText,
+                      ),
+                      Text(
+                        "${state.activeTodoCount} items left",
+                        style: AppTextStyles.bodyItems,
+                      )
+                    ],
+                  );
+                },
               ),
               const SizedBox(
                 height: 20,
@@ -70,14 +78,26 @@ class _TodoWidgetState extends State<TodoWidget>
               const SizedBox(
                 height: 10,
               ),
-              const ButtonPress(
+              ButtonPress(
                 text: "Add tasks",
+                onPressed: () {
+                  final String todoDesc = textEditingController.text;
+                  if (todoDesc.trim().isNotEmpty) {
+                    context.read<TodoListCubit>().addTodo(todoDesc);
+                    textEditingController.clear();
+                  }
+                },
               ),
               const SizedBox(
                 height: 20,
               ),
               SearchField(
                 textEditingControlle: searchEditingController,
+                onChange: (String? searchTerm) {
+                  if (searchTerm != null) {
+                    context.read<TodoSearchCubit>().setSearchTerm(searchTerm);
+                  }
+                },
               ),
               const SizedBox(
                 height: 20,
@@ -117,97 +137,27 @@ class ActiveTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(children: [
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Flutter App development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-      ListTile(
-        leading: const Icon(
-          Icons.check_box,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          "I want to Learn Dart development",
-          style: AppTextStyles.bodySmall,
-        ),
-      ),
-    ]);
+    // final Filter filter;
+
+    final todos = context.watch<FilteredTodoCubit>().state.filtered;
+    return ListView.separated(
+      shrinkWrap: true,
+      itemCount: todos.length,
+      separatorBuilder: (context, index) {
+        return const Divider();
+      },
+      itemBuilder: (context, index) {
+        return ListTile(
+          leading: const Icon(
+            Icons.check_box,
+            color: AppColors.primary,
+          ),
+          title: Text(
+            todos[index].desc,
+            style: AppTextStyles.bodySmall,
+          ),
+        );
+      },
+    );
   }
 }

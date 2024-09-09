@@ -5,9 +5,13 @@ import 'package:todo_cube/utils/appcolors.dart';
 
 class CustomTextField extends StatelessWidget {
   final String labelText;
+
   final TextEditingController textEditingControlle;
-  const CustomTextField(
-      {super.key, required this.textEditingControlle, required this.labelText});
+  const CustomTextField({
+    super.key,
+    required this.textEditingControlle,
+    required this.labelText,
+  });
 
   @override
   Widget build(BuildContext context) {
