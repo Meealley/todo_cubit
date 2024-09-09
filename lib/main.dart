@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_cube/app_router.dart';
 import 'package:todo_cube/cubits/cubits.dart';
-import 'package:todo_cube/home/todo_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {

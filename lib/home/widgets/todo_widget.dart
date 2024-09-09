@@ -6,6 +6,7 @@ import 'package:todo_cube/common/button.dart';
 import 'package:todo_cube/common/custom_textfield.dart';
 import 'package:todo_cube/common/search_field.dart';
 import 'package:todo_cube/cubits/cubits.dart';
+import 'package:todo_cube/home/widgets/debounce.dart';
 import 'package:todo_cube/models/filter.dart';
 import 'package:todo_cube/utils/app_textstyle.dart';
 import 'package:todo_cube/utils/appcolors.dart';
@@ -23,6 +24,9 @@ class _TodoWidgetState extends State<TodoWidget>
   final TextEditingController searchEditingController = TextEditingController();
 
   late TabController _tabController;
+  final debounce = Debounce(
+    milliseconds: 1000,
+  );
 
   @override
   void initState() {
@@ -97,7 +101,9 @@ class _TodoWidgetState extends State<TodoWidget>
                 textEditingControlle: searchEditingController,
                 onChange: (String? searchTerm) {
                   if (searchTerm != null) {
-                    context.read<TodoSearchCubit>().setSearchTerm(searchTerm);
+                    debounce.run(() {
+                      context.read<TodoSearchCubit>().setSearchTerm(searchTerm);
+                    });
                   }
                 },
               ),
